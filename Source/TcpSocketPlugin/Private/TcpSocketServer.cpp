@@ -309,7 +309,7 @@ uint32 FTcpServerSocketWorker::Run()
 		// Connect
 		if (!bConnected)
 		{
-			UE_LOG(LogTemp, Log, TEXT("Socket %i disconnected!"), this->id);
+			UE_LOG(LogTemp, Log, TEXT("Socket %i disconnected!, Stoping Thread"), this->id);
 			// stop?
 			bRun = false;
 		}
@@ -324,8 +324,8 @@ uint32 FTcpServerSocketWorker::Run()
 		// check if we weren't disconnected from the socket
 		Socket->SetNonBlocking(true); // set to NonBlocking, because Blocking can't check for a disconnect for some reason
 		int32 t_BytesRead;
-		uint8 t_Dummy[4];
-		if (!Socket->Recv(t_Dummy, 4, t_BytesRead, ESocketReceiveFlags::Peek))
+		uint8 t_Dummy;
+		if (!Socket->Recv(&t_Dummy, 1, t_BytesRead, ESocketReceiveFlags::Peek))
 		{
 			bRun = false;
 			continue;
@@ -406,6 +406,8 @@ uint32 FTcpServerSocketWorker::Run()
 	AsyncTask(ENamedThreads::GameThread, [this]() {
 		ThreadSpawnerActor.Get()->ExecuteOnDisconnected(id, ThreadSpawnerActor);
 		});
+	AsyncTask(ENamedThreads::GameThread, [this]() { 
+		UE_LOG(LogTemp, Log, TEXT("Stopping Workerthread %i"), this->id); });
 
 	SocketShutdown();
 
