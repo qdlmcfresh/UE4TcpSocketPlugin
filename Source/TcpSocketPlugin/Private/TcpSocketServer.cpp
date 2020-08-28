@@ -70,8 +70,13 @@ void ATcpSocketServer::Listen()
 
 }
 
-void ATcpSocketServer::Disconnect()
+void ATcpSocketServer::Disconnect(int32 ConnectionId)
 {
+	if (TcpWorkers.Contains(ConnectionId)) {
+		UE_LOG(LogTemp, Log, TEXT("Log: Disconnecting %i"), ConnectionId);
+		TcpWorkers[ConnectionId]->Stop();
+		TcpWorkers.Remove(ConnectionId);
+	}
 }
 
 int ATcpSocketServer::getNum()

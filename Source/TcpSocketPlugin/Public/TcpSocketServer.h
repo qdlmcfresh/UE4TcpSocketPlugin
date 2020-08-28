@@ -42,7 +42,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "SocketServer")
 		void Listen();
 	UFUNCTION(BlueprintCallable, Category = "SocketServer")
-		void Disconnect();
+		void Disconnect(int32 ConnectionId);
 	/* False means we're not connected to socket and the data wasn't sent. "True" doesn't guarantee that it was successfully sent,
 only that we were still connected when we initiating the sending process. */
 	UFUNCTION(BlueprintCallable, Category = "Socket") // use meta to set first default param to 0
