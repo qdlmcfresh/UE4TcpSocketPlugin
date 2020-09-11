@@ -369,7 +369,7 @@ uint32 FTcpServerSocketWorker::Run()
 
 			receivedData.SetNumUninitialized(BytesReadTotal + PendingDataSize);
 			int32 BytesRead = 0;
-			if (!Socket->Recv(receivedData.GetData() + BytesReadTotal, 20, BytesRead))
+			if (!Socket->Recv(receivedData.GetData() + BytesReadTotal, 500, BytesRead))
 			{
 				 ISocketSubsystem* SocketSubsystem = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM);
 				 int error = (int)SocketSubsystem->GetLastErrorCode();
