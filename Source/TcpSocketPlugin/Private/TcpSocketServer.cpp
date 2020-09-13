@@ -212,8 +212,12 @@ uint32 FTcpServerAcceptWorker::Run()
 			if (pendingConnection) {
 				FSocket* newConnection = Socket->Accept(TEXT("Connection"));
 				UE_LOG(LogTemp, Log, TEXT("Connected"));
+				int newRecSize = 0;
+				int newSendSize;
+				newConnection->SetReceiveBufferSize(500, newRecSize);
+				newConnection->SetSendBufferSize(500, newSendSize);
 				int num = ThreadSpawnerActor.Get()->getNum();
-				TSharedRef<FTcpServerSocketWorker> worker(new FTcpServerSocketWorker(newConnection, ThreadSpawnerActor, num, 500, 500, 0.008f));
+				TSharedRef<FTcpServerSocketWorker> worker(new FTcpServerSocketWorker(newConnection, ThreadSpawnerActor, num, newRecSize, newSendSize, 0.008f));
 				ThreadSpawnerActor.Get()->addWorker(num, worker);
 				AsyncTask(ENamedThreads::GameThread, [this, num]() {
 					ThreadSpawnerActor.Get()->ExecuteOnConnected(num, ThreadSpawnerActor);
@@ -342,6 +346,12 @@ uint32 FTcpServerSocketWorker::Run()
 		{
 			TArray<uint8> toSend;
 			Outbox.Dequeue(toSend);
+			FString byteString = "";
+			for (uint8 byte : toSend) {
+				//Print hex data
+				byteString.Append(FString::Printf(TEXT("%02x "), byte));
+			}
+			ATcpSocketConnection::PrintToConsole(FString::Printf(TEXT("Sending %i bytes: %s\n"), toSend.Num(), *byteString), false);
 
 			if (!BlockingSend(toSend.GetData(), toSend.Num()))
 			{
@@ -365,11 +375,11 @@ uint32 FTcpServerSocketWorker::Run()
 				break;
 			}
 
-			ATcpSocketConnection::PrintToConsole(FString::Printf(TEXT("Pending data %d"), (int32)PendingDataSize), false);
+			ATcpSocketConnection::PrintToConsole(FString::Printf(TEXT("Pending data %d, BufferSize: %i"), (int32)PendingDataSize, RecvBufferSize), false);
 
 			receivedData.SetNumUninitialized(BytesReadTotal + PendingDataSize);
 			int32 BytesRead = 0;
-			if (!Socket->Recv(receivedData.GetData() + BytesReadTotal, 500, BytesRead))
+			if (!Socket->Recv(receivedData.GetData() + BytesReadTotal, RecvBufferSize, BytesRead))
 			{
 				 ISocketSubsystem* SocketSubsystem = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM);
 				 int error = (int)SocketSubsystem->GetLastErrorCode();
