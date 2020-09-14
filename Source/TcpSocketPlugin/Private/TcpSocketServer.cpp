@@ -398,6 +398,12 @@ uint32 FTcpServerSocketWorker::Run()
 		// if we received data, inform the main thread about it, so it can read TQueue
 		if (receivedData.Num() != 0)
 		{
+			FString byteString = "";
+			for (uint8 byte : receivedData) {
+				//Print hex data
+				byteString.Append(FString::Printf(TEXT("%02x "), byte));
+			}
+			ATcpSocketConnection::PrintToConsole(FString::Printf(TEXT("Received %i bytes: %s\n"), receivedData.Num(), *byteString), false);
 			Inbox.Enqueue(receivedData);
 			AsyncTask(ENamedThreads::GameThread, [this]() {
 				ThreadSpawnerActor.Get()->ExecuteOnMessageReceived(id, ThreadSpawnerActor);
